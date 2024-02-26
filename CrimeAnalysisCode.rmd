@@ -1,0 +1,525 @@
+---
+title: "Understanding Crime in Toronto"
+author: "Dhanraj Patel - 1003965168"
+subtitle: Assignment 2
+output:
+  pdf_document:
+    toc: yes
+  html_document:
+    toc: yes
+    toc_float: yes
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+```{r, echo=FALSE, include=FALSE} 
+
+library(opendatatoronto)
+
+library(survey)
+library(tidyverse)
+library(janitor)
+library(skimr)
+library(visdat)
+```
+
+```{r, echo=FALSE,include=FALSE}
+idoftheonewewant <- search_packages("crime")[1,'id']
+idoftheonewewant
+idoftheonewewant <- pull(idoftheonewewant,id)
+list_package_resources(idoftheonewewant)
+idofthedata <- pull(
+  list_package_resources(idoftheonewewant)[1,"id"],
+  id
+)
+crime_data <- get_resource(idofthedata)
+
+```
+
+
+
+
+# Introduction
+
+## Overview
+
+In Canada, Toronto has always prided itself on being one of the safest cities not only within Canada, but in all of the world. This can be seen by the numerous articles released by The Economist in which they rank the top cities in the world in terms of how safe they are. Within these articles Toronto routinely ranks near the top, with Toronto being ranked the second safest city in the world in 2021 [2]. In addition, the city of Toronto is also one of the fastest growing growing cities in the world, with the city of Toronto reporting that from a recent study that Toronto takes the top spot as the fastest growing city compared to both Canadian and the American cities [3]. With the city growing at such a rapid pace, this study will investigate how the number of victims of recorded criminal cases in the city has fluctuated between the years 2014 to 2020. To do this we will be using data provided by the Toronto Police Service (TPS). Every year, the Toronto police service releases an annual statistical dataset of all the reported crimes within the past seven years (this study will use the most recent report which contains reported crimes between the years 2014-2020) and the dataset that will be used in this study includes information on the number of victims of both assault and non-assault related crimes separated by their sex and age group. 
+
+It is important to analyze the trend of the number of criminal victims so that residents of Toronto can get a better understanding of how crime has been evolving in the city from 2014 to 2020. As one of the fastest growing and largest cities in North America [3], crime is an ever-present issue among residents in Toronto. From an Statistics Canada study on public perception of safety they found that 50 percent of Canadians stated that they do not feel as their neighborhoods crime rates have decreased or increased and that women (particularly young women) reportedly felt more unsafe walking alone at night compared to men [4]. By using the data provided by the Toronto police service, we are able to use statistical models to analyze if the overall trend of the number of victims of criminal offenses has stagnated, increased or decreased and better understand the crime rates of Toronto. In addition, the study can be extrapolated to global relevance by generalizing the findings of this study to other cities in the world who have similar characteristics as Toronto. It is important to note no two cities are exactly the same so it would be difficult to make a one to one generalization and that the findings of this study would be more generalizable the more characteristics that the city being compared to Toronto and Toronto have. 
+
+
+## Terminology 
+
+Before continuing it is important to understand some terminology important to better understanding the data used in the report. The data given by the Toronto Police Service, breaks down the number of victims of crimes between 2014 to 2021, the dataset subdivides the crimes by the specific type of crime that was committed. The crimes are subdivided by: assault, robbery, sexual violation and other. Other refers to crimes that do not fit into any of the other three categories; an example of this is fraud. 
+
+
+## Central Research Question
+
+By utilizing the data provided by the Toronto Police Service to investigate, this study will aim to answer:
+
+ **how has the rate of total number of victims of crimes in Toronto changed from 2014 to 2020?**
+
+We will aim to better understand if Toronto has become safer in the seven year span by investigating whether or not the total number of victims of crimes has increased, decreased or stagnated through the years. It is also important to distinguish between male and female victims of crime to discern if one sex has a lower or higher rate of being victimized by crimes compared to the other. Before delving into to data, through the Statistics Canada study in which women reported to feeling more unsafe walking alone at night compared to men [4] and Toronto having an all time high rank in The Economist's list of the safest cities in the world in 2021 [2]; in this study we hypothesize that from 2014 to 2020 Toronto will have seen negative trend of crime rates with women having a higher rate of being a victim of a crime compared to men.   
+
+
+# Data
+
+## Data Collection Process
+
+Before delving into to the data we will be using in our models, it is important to first understand how the data was collected. When a crime is reported to the Toronto Police Service, they make sure to record the details of the crime thoroughly. They record the information on the type of crime committed, information on the details of the victims (while respecting privacy/anonymity), the location of the crime, the date/time the crime occurred and many other details. Then at the end of each year the Toronto Police Service releases an annual statistical report to the public where they make the information available to the public to see on the Toronto Police website [5]. The dataset used in this study is part of the annual statistical report which focuses on information collected on the victims of crimes between the years 2014 to 2020. This dataset and all the other annual reports can be found on the Open Data Portal [6]  which is a public database which contains data relating to the city of Toronto for the public to see. The specific dataset used in this study can be found here: https://open.toronto.ca/dataset/police-annual-statistical-report-victims-of-crime/ [1]. 
+
+
+In addition to understand how the data was collected it is also important to note the limitations and draw backs of the data used in the study. One limitation of this data is that the Toronto Police annual statistical report only reports data from the previous seven years, so in this study we will be analyzing victims of crimes in Toronto between the years 2014 till 2020. This study will not include data on the victims of crimes before the year 2014. Another drawback with the dataset is that it will not include crimes that were not reported to the police. From an article written by the Canadian Broadcasting Corporation (CBC), they reported that in 2009 that Canadian would only report 34 percent of crimes they experienced [7]. While 2009, is not a year which is included in the dataset used in this study, this exemplifies how a large amount of crimes people experience goes unreported. This study which seeks to understand how crime in Toronto has changed between 2014 to 2020 is limited by the fact that it can only use data of reported crime in its analyze.   
+
+
+
+
+## Data Summary
+
+### Introducing the Data
+
+The main goal of this study is to understand how crime in Toronto has changed between the years 2014 to 2020 and in order to do this we will be using data from the statistical annual report released by the Toronto Police Service. The data we will be using includes information on the victims of reported crimes between the years 2014 to 2020. The dataset we will be using includes information on the type of crime committed, the sex of the victim of the crime, the age group of the victim of the crime and the year the crime was reported. By using this data we will be able to analyze how the rate of crime has fluctuated between the years 2014 to 2020 and we will be be able to investigate if there has been an increasing, decreasing or stagnant trend of the crime rate in Toronto. Also, we will be able to separate the sex of the victims in our analysis to better understand how each sex has been effect by the crime rates in Toronto. Using this data, we will able to understand if the city of Toronto has gotten safer in the last seven years.
+
+### Cleaning the Data
+
+```{r, echo=FALSE,include=FALSE}
+
+crime_data <- crime_data %>% 
+  select(-geometry, -ObjectId, -AssaultSubtype, -Index_)
+
+crime_data2 <- crime_data %>% 
+  filter(AgeGroup != "Unknown")
+
+crime_data3 <- crime_data2 %>% 
+  filter(Sex != "U")
+test<-crime_data3[]
+d <- data.frame(a = c(1,2,3))
+n <- 3
+d <- do.call("rbind", replicate(n, d, simplify = FALSE))
+
+sum(crime_data3$Count_)
+for(i in 1:nrow(d)) 
+{
+crime_data3[i,]
+
+
+
+}
+```
+
+
+```{r, echo=FALSE,include=FALSE}
+
+d <- crime_data3[1,]
+
+
+
+
+#d <- do.call("rbind", replicate(n, d, simplify = FALSE))
+counter <- crime_data3$Count_
+#sum(crime_data3$Count_)
+
+
+
+for(i in 1:nrow(crime_data3)) {
+print(counter[i])
+print(crime_data3[i,])
+dn <- do.call("rbind", replicate(counter[i], crime_data3[i,], simplify = FALSE))
+d<-rbind(d,dn)
+
+}
+
+```
+
+```{r, echo=FALSE,include=FALSE}
+d = d[-1,]
+
+```
+
+```{r, echo=FALSE,include=FALSE}
+dd <-d %>% 
+  mutate(Sex_Num = ifelse(Sex == "M", 1, 2))
+
+
+dddd <-d %>% 
+  mutate(age_Num = ifelse(AgeGroup == "Adult", 1, ifelse(AgeGroup == "Youth", 2, 3)))
+
+
+
+```
+
+After retrieving the data it is important to clean the data so that that the results found are an accurate representation of the data. To clean the data the first thing I did was to remove all columns that would not be utilized in the model and numerical/graphical summaries. In this process, I removed all columns that didn't include the identification number of the reported crime, type of crime committed, the sex and age group of victim, the year the crime was reported, and the total count of victims of each crime. In addition, to clean the data I removed all rows of data which contained missing information. In many cases the dataset didn't state the sex, age group or type of crime committed as it was unknown to the Toronto Police. In order to avoid using missing information in the analysis, all rows that contained missing data were removed. In addition I added a two column that corresponded numerical values to the categories sex and age groups in order to create numerical summaries of the distribution. As for the the sex new category for each instance of a reported crime, I set the value to one if the victim was male and 2 if the victim was female. Lastly, for the age group numerical category I set the value of 3 if the victim is classified as a child (under 12), 2 if the victim is classified as youth (between 12 and 17) and 1 if the victim in classified as an adult (18 or older).
+
+
+### Important variables
+  
+  The following are the important variables of the dataset that were used for the numerical and graphical summaries in addition to the analysis portion of the study.
+
+ * ReportedYear - The year the reported crime occurred
+ * Sex - The sex of the victim of the reported crime. 
+ * category - The category of crime that occurred. The categories are: assault, sexual violation, robbery and other. 
+ * AgeCohort - The age interval of the victim of the crime.
+ * AgeGroup - The age group of the victim; either adult, youth or child. 
+ * Sex_num - Numerical correspondence of sex of victim (1: male, 2: female) 
+ * Age_num - Numerical correspondence of agr group of victim (1: adult, 2: youth, 3: child) 
+ 
+ 
+### Numerical Summaries
+
+After preparing the data is is important to preform a numerical analysis on the dataset to gain a better understating the data collected and the location and spread of the data. 
+
+**Comparing the sex of the total reported victims in all 7 reported years**
+
+In order to understand the demographics of the sex of the victims, we will identifying the numerical summaries of the reported victims of crime in all years recorded. 
+
+```{r, echo=FALSE,include=FALSE}
+
+
+crime_grouped <- dd %>%
+  select(ReportedYear, Sex_Num) %>%
+  group_by(ReportedYear)%>%
+  summarize(
+  Q1 = quantile(Sex_Num, c(.25)),
+  Median = median(Sex_Num),
+  Q3 = quantile(Sex_Num, c(.75)),
+  IQR = quantile(Sex_Num, c(.75))- quantile(Sex_Num, c(.25)), 
+  Mean = round(mean(Sex_Num), 4),
+  Trimmean = round(mean(Sex_Num, trim = 0.1),4), 
+  Var = round(var(Sex_Num), 4),
+  SD = round(sd(Sex_Num),4))
+
+knitr::kable(crime_grouped, caption = "The trimmed mean is trimmed by 10 percent")
+
+```
+```{r, echo=FALSE}
+
+
+knitr::kable(crime_grouped, caption = "The trimmed mean is trimmed by 10 percent")
+
+```
+
+
+In table_1 we see the the distribution of the sex of the victims in all 7 years reported. In the data the value of represents males and a value of 2 represents females. From there we can see that all years have a similar variance value of about 0.25  and a similar standard deviation of 0.5. In addition, we see that in the years 2014, 2015 and 2020 that females were victimized more in crimes compared to man and in the years 2016 through 2019 that males were victimized more. We can see this through the median, mean and trimmed mean values. Lastly, the data found the IQR value to be 1 for all 7 years.
+
+
+**Comparing the age intervals of the total reported victims in all 7 reported years**
+
+In addition to sex it is helpful to investigate the distribution of the different age intervals of all the victims of crimes in the dataset.
+
+
+
+```{r, echo=FALSE,include=FALSE}
+
+
+crime_grouped <- dddd %>%
+  select(ReportedYear, age_Num) %>%
+  group_by(ReportedYear)%>%
+  summarize(
+  Q1 = quantile(age_Num, c(.25)),
+  Median = median(age_Num),
+  Q3 = quantile(age_Num, c(.75)),
+  IQR = quantile(age_Num, c(.75))- quantile(age_Num, c(.25)), 
+  Mean = round(mean(age_Num), 4),
+  Trimmean = round(mean(age_Num, trim = 0.1),4), 
+  Var = round(var(age_Num), 4),
+  SD = round(sd(age_Num),4))
+
+knitr::kable(crime_grouped, caption = "The trimmed mean is trimmed by 10 percent")
+
+```
+```{r, echo=FALSE}
+
+
+knitr::kable(crime_grouped, caption = "The trimmed mean is trimmed by 10 percent")
+
+```
+
+From Table_2 we are able to see the numerical summaries for the age categorical distribution of all the victims of crimes. In the data 1 represents an adult (older than 17), 2 represents youth (12-17) and 3 represents child (less than 12). From the numerical summaries we see that in all years the values of q1, median and q3 are all 1 which leaves us to believe there is a great right skew with most victims of crimes being adults. This is further backed up by the mean an trimmed mean values for all years which are close to 1. This is expected as most crimes do involve adults rather than those under the age of 18 and in addition the age interval of adults is much larger than the other two intervals. Finally, the variance and standard deviation seem to all be decreasing every year.
+
+
+### Graphical Summaries
+
+In addition to numerical summaries it is helpful to use graphs in order to get a more visual idea of the distribution of the variables. 
+
+
+**Comparing sex and age to the different types of crime committed**
+
+(Graph_1)
+
+
+
+```{r, include=FALSE} 
+
+graph_1 <- dddd %>%
+  select(Sex, AgeGroup, Subtype) %>%
+  group_by(Sex, AgeGroup, Subtype) %>%
+  summarize(count = n())
+
+graph_1
+Final_grapgh <-graph_1 %>%
+ggplot(aes(x= AgeGroup, y=count, fill=Subtype)) + geom_bar(stat="identity")+
+ggtitle("Comparing age and type of crime commited against victim (seperated by sex)") +
+xlab("Age intervals of crime victims") +
+ylab("Total count of crime victims")+
+facet_grid(~Sex)
+
+
+```
+
+```{r,echo=FALSE,message = FALSE,fig.align='center'}
+Final_grapgh
+
+
+
+```
+In graph_1 we are able to compare the age and sex of the victims with the type of crime committed against them. For males and females we see that most victims are adults by a wide margin, followed by youths and then children with the lowest total count. In addition, we see for both sexes that the largest amount of crime they face is assault. In addition, it seems as though males face a larger proportion of robbery charges while females face a much larger proportion of sexual violence crimes comparatively. Adults in both sexes face a larger amount of crime in the other category compared to youth and child victims. Lastly, from the graph we see that there are more total number of males in the data compared to females; these values mirror what we found in the numerical summaries section. 
+
+**Comparing total number of crimes in every year**
+
+
+(Graph_2)
+
+
+
+```{r, include=FALSE} 
+
+graph_2 <- dddd %>%
+  select(ReportedYear) %>%
+  group_by(ReportedYear) %>%
+  summarize(count = n())
+
+graph_2
+Final_grapgh2 <-graph_2 %>%
+ggplot(aes(x= ReportedYear, y=count)) + geom_bar(stat="identity")+
+ggtitle("Comparing total number of victim of crimes in each year") +
+xlab("Year") +
+ylab("Total count of crime victims")
+
+
+```
+
+```{r,echo=FALSE,message = FALSE,fig.align='center'}
+Final_grapgh2
+
+
+
+```
+In graph_2 we can see the total number of victims of crimes in the years from 2014 to 2020. From this graph we see that from 2014 to 2019 the total number of crimes increases and the we see a drop in the total number of victims in 2020. This makes intuitive sense due to the fact that as Toronto is one of the fastest growing cities in North America, it would reasonably follow that the total number of victims of crime is increasing. Then in 2020, it makes sense that the total number of victims would decrease due to the Coronavirus pandemic in which the city enacted lockdowns which lowered the total number of victims of crime in that year. With everyone staying home, it makes sense that crime would decrease.
+
+
+All analysis for this report was programmed using `R version 4.0.2`. 
+
+
+# Methods
+
+
+Using linear regression we will investigate how the total number of victims changed within the years 2014-2020 for males and females distinctly.
+
+We are able to use linear regression modeling to identify trends and fluctuations in the total number of victims of crimes between 2014-2020 for both sexes. To do this we need to graph the number of victims in each year (separated by sex) and use linear regression to estimate a line of best fit the value of the model that will help us understand the trends of how the number of victims changed between the years. In order to do this we will be using the model:
+
+## Understanding the model
+
+$$
+Y_i = \beta_0 + \beta_1x_{i} + \beta_21(sex=male) + \epsilon_i \\
+$$
+$$
+\epsilon_i \sim N(0, \sigma^2) \\
+$$
+
+Within this model $Y_i$ is the total number of cigarettes victims of in the ith year, $x_i$ is the ith year (ranges from 2014-2020). Within this model $\beta_1x_{i}$ the slope of the trend of how the number of victims changed between the years 2014-2020 and $\beta_21(sex=male)$ represents the average increase in slope for when the observation is male. This is necessary to compare the change in the number of victims for both males and females.It is important to note that dummy variable coding was used, since the categorical variable had two possible categories (males and females), one new variable was introduced. Furthermore, $\epsilon_i$ represents the random/error component of the model observations. Lastly, the $\beta_0$ represents the y intercept of the model when all the predictors are zero.
+
+**Methodologies of the model**
+
+From the data we are able to find the total number of victims of crimes between the years 2014 and 2020 and for each instance we know if the victim is male of female. Using multi-variable linear regression we are estimating the change in crime rates for males and females. Using the linear model line of best fit we will be able to understand the crime rate trend in Toronto and see if it is increasing, decreasing or stagnant. 
+
+Within our model $Y_i$ is our dependent variable and represents the total number of victims of crime in the ith year and for males and females. It is the dependent variable as we are measuring total number of victims in relation to the year and sex of victim. In our model the independent variables are the year the crime occurred and the sex of the victim. These were chosen as the dependent variables as they are factors that relate to the independent variable of total number of victims and are independent of other variable factors. Lastly it is important to note that the sex of the victim is a categorical variable and the year the crime occurred is a numerical variable, they are also both independent.    
+
+
+**Assumptions**
+
+
+With the use of linear regression we need to assume the following about our data:
+
+  * Independence: Normality: $Y_i$ is distributed normally for any fixed value of $x_i$,
+  * Linearity: The relationship the mean of $Y_i$ and between $x_i$ is linear.
+  * Independence: All observations are independent.
+  * Homoscedasticity: The variance of residual is the same for any value of $x_i$.
+  
+  
+**Data Aggregation**
+```{r, echo=FALSE, include=FALSE}
+
+dataagg <- dddd %>%
+  select(ReportedYear, Sex) %>%
+  group_by(ReportedYear, Sex) %>%
+  summarize(count = n())
+
+
+```
+
+```{r, echo=FALSE}
+
+knitr::kable(dataagg, caption = "Total number of victims in each year sepereated by sex")
+
+```
+
+From (Table_3) we are able to the total number of victims of crime in Toronto from the years 2014-2020 separated by sex. We are able to use these vales to use multi-variable linear regression modeling to estimate the trend of crime in Toronto through the years separated by sex. From what we are able to see with the table values,the number of victims seems to be generally increasing until 2019 and then decrease in 2020. 
+
+
+## Hypothesis Test 
+
+With the results of the data we are able to identify the total number of victims of crimes between the years 2014 to 2020 of both males and females separately. Using hypothesis tests in conjunction with the data we are able to identify if there is a significant fluctuation between the total amount of victims of crimes between 2014-2020 when comparing male and female victims. 
+
+In the hypothesis test our null hypothesis and our alternative hypothesis are the following.
+
+Null hypothesis ($H_0$): $\mu_a = \mu_b$ where $\mu_a$ is the true population total number of male crime victims in Toronto between 2014-2020 and $\mu_b$ is the true population total number of female crime victims in Toronto between 2014-2020. This hypothesis states that there was no change in the true population total number of victims between males and females. 
+
+Alternative hypothesis ($H_A$): $\mu_a  \neq \mu_b$ where $\mu_a$ is the true population total number of male crime victims in Toronto between 2014-2020 and $\mu_b$ is the true population total number of female crime victims in Toronto between 2014-2020. This hypothesis states that there was a significant change in the true population total number of victims between males and females. 
+
+# Results 
+
+In the model the key variables I used in the model are the following. The dependent variable represents the the total number of crime victims, the independent variables I used were sex of the victim and the year the crime occurred in. The sex of the victim is a categorical variable and the year the crime occurred is a numerical variable.
+
+## Model results
+
+
+```{r, include = FALSE}
+
+dataagg
+crime.design <- svydesign(id=~1, data=dataagg)#, fpc=fpc.srs)
+
+mysvylm <- svyglm(count ~ ReportedYear + Sex, crime.design)
+summary(mysvylm)
+
+
+```
+
+From the results we have the following values:
+
+(Table_4)
+
+| $\hat{\beta}_0$ | -96940.804 |
+|--------------- | --------|
+| $\hat{\beta}_1$ | 54.518 |
+|--------------- | --------|
+| $\hat{\beta}_2$  | 6.571 |
+
+and the full model is:
+
+$$
+Y_i = -96940.804 + 54.518x_{i} + (6.571)(1(sex=male)) + \epsilon_i \\
+$$
+In table_4 we see the estimated values of the coefficients in the model. We see that $\hat{\beta}_0$ is valued at -96940.804. The value of represents the y-intercept of the model when all the values of the predictors are zero. The reason why the value ended up as a negative value is that the dataset reported the number of victims from 2014 to 2020 and the extrapolation resulted in a negative vale.
+
+We see that $\hat{\beta}_1$  resulted in 54.518. This represents the overall trend for the change in crime rates for both males and females. We see that on average per year the total number of victims increased by 54.518 victims. Since the value is positive we see an increasing trend meaning that the crime rate is increasing. 
+
+We see that $\hat{\beta}_2$  resulted in 6.571. This represents the total overall average number of victims added for male observations in comparison to females. Since the value is positive we see that males between the years 2014 to 2020 are victimized more when compared to females by a rate of 6.571.
+
+
+(Graph_3)
+```{r,echo=FALSE,message = FALSE,fig.align='center'}
+
+ggplot(dataagg,aes(y=count,x=ReportedYear,color=Sex))+geom_point()+
+  geom_smooth(method = "lm", se = FALSE)+
+  ggtitle("Comparing total number of crimes in each year (seperated by sex)") +
+  xlab("Year") +
+  ylab("Total count of crime victims")
+
+```
+
+
+From graph_3 we are able to see the plot of the total number of victims of crime from 2014 to 2020 for each sex and the line of best model estimation for the change in crime rate though the years for each sex. As we can see from the graph that from 2014 to 2019 the rate of total number of victims increased, but we also see a drop in the total number of victims in 2020.  Lastly we see that the rate of males being victim of crimes is higher throughout the years, but both sexes see an increase rate of total number of victims.
+
+
+**Interpreting of the results**
+
+From graph_1 we see the total amount of victims of crime from 2014 to 2020 and the model estimation of the rate of total number of victims through the years. We see that from 2014 to 2019 the total number of victims increase for both males and females every year, but for both sexes there is a significant drop in the total number of victims in 2020. In addition, we see that despite the drop in 2020, the model estimate resulted in a positive increasing trend for both males and females, indicating an average rise in the total number victims of crimes through the years. Lastly, we notice that males have a larger rate of being victims of crimes compared to females.
+
+These values do make intuitive sense. We know that Toronto is one of the fastest growing cities in North America in terms of population [3]. With such a growing population it makes sense that from 2014-2019 that the number of victims would increase as there more people in the city in each continuing year. In addition, the sudden drop in the number of the total number of victims in the year 2020 also makes sense as due to the global Coronavirus pandemic, there were numerous lockdown orders in the city of Toronto. These lockdown orders resulted in many people staying home for extended periods of time in order to slow down the transmission of the virus. The staying home for the people in Toronto would then in turn lead to a drop in the number of victims of crimes in 2020. 
+
+
+## Hypothesis Test Results
+
+```{r, echo=FALSE, include=FALSE}
+
+dataagg2 <- dataagg %>% 
+  filter(Sex == "M")
+dataagg3 <- dataagg %>% 
+  filter(Sex == "F")
+
+
+
+t.test(dataagg2$count,dataagg3$count)
+
+
+
+```
+
+Using hypothesis test we wanted to investigate if there is a significant difference in the total number of victims of violent crimes between 2014-2020 between males and females. After preforming the test we calculated a p value of 0.9887 and since that value is less than 5 we reject the null hypothesis and accept the alternative hypothesis which states that there is a significant different in the total number of victims between males and females. From the result in the model and the graph_3 we see that the rate of total number of victims of crimes for male is increasing in a greater rate compared to females. From the result of the hypothesis test we are able to conclude that there is a significant change in the rate of total number of male victims compared to females. 
+
+
+This value makes intuitive sense when you factor in the fact that females are more likely to suffer from sexual violence which is a subset of crime which only gets reported on an average 9 out of 10 times [8]. From graph_1 we saw that females are targeted a disproportionate amount in sexual violence, it would then make sense that since sexual crimes are unreported nine out of ten times [8] that males would result in significantly higher amount of victims of crimes from 2014 to 2020.  
+
+All analysis for this report was programmed using `R version 4.1.1`. I used the `glm()` function in base `R` to derive the estimates of a frquentist logistic regression in this section [4].
+
+
+# Conclusions
+
+As we have seen Toronto is one of the biggest cities in North America with a increasing population every year [3]. In addition on being one of the fastest growing cities, it is also highly ranked on being one of the safest cities in the world [2]. In order to investigate whether Toronto was getting safer over time, using data given from the Toronto Police Annual report we can investigate the total number of victims of crime from 2014 to 2020 and see if the total number of crimes in Toronto were increasing or decreasing. In addition, we can also separate the total number of victims in terms of their sex and identify if the different rate of total victims through the years for both males and females independently. In the beginning of the study, the hypothesis was that the results would yield a negative trend with females experiencing a higher rate of crime. 
+
+In the numerical analysis section we measured the distribution of the sex and age group of the reported victims. We found that in some years women had a higher rate of victimization and in other years men. Also, we noticed that all together that males had a higher number count of victimization in all of the data. As for the age groups we noticed that a majority of crimes were committed against adults instead of youths and children. In the graphical summaries section we noticed that males seemed to make up a higher proportion of robberies related crimes while in contrast females made up a higher percentage of sexual violence crimes.
+
+In the graphical summaries section we used the data in conjunction with the model we estimated the rate of victimization from the years 2014 to 2020 and investigate how the rate of victimization changed for males and females were independently. From the results we found out that for both males and females that they both had an increasing rate of crimes committed against them between the years 2014 to 2019. In the year of 2020 we saw a drop of the total number of victims attributed to the Coronavirus. Also, we found that from the hypothesis test that the total number of male victims from 2014 to 2020 is significantly higher compared to females. 
+
+When taking a step back and looking at the bigger picture there are many things to consider when analyzing the data. Toronto is the largest city in Canada by population and with a growing population. When measuring the increase in the number of victims from the years we also have to account for the rate of population increase in the city to identify if the city is getting safer or not. Also, we need to account for the biases this data has which includes the the non response bias and the limitation of using only the past seven years of data. This will be further expanded on in the next section. 
+
+
+## Weaknesses
+
+When interpreting the results we need to keep certain limitations mind. The limitation we need to keep in mind is that the data may be effected by non response bias. The data in this study was limited to using the results of crimes that were actually reported. According a CBC study, only 1 out of 10 of sexual violence crimes are actually reported [8], this metric heavily biases the female reported crime results as we saw from graph_1 that females are disproportionately victims of sexual violence. From this study we are able to understand that there are many more crimes committed in Toronto that were not accounted for and led to biased results.
+
+In addition, another limitation is that this study only looked at the years between 2014 to 2020 and did not account for any other years. By studying those seven years in particularly we lose out on the context from all the years that were not apart of the study. Those other years could provide insight on the crime rate of Toronto that is missed from this study. Lastly, one limitation is that we looked at the victimization rated alone without accounting for factors such as population growth that can provide more context to the results.
+
+
+## Next Steps
+
+As for next steps, most of the steps revolve around rectifying and understanding the limitations of report. The next steps of this study is mainly to step back and utilize data that provides more context to the data results found. Many more years of data are needed instead of just the previous seven to get a more complete idea of if Toronto is getting safer as a city. In addition, you need to account for the growth in the population as well instead of just looking at the total number of victims of crimes alone. 
+
+In addition, you need to account for the numerous amount of unreported crimes as best as possible. One way is to use anonymous survey data to get a more complete idea of all the victims of crimes that were not reported and used in the data. These suggestions will help give a bigger picture idea on how safe Toronto is and if it is getting safer.
+
+## Discussion
+
+Toronto is one of the biggest and fastest growing cities in Canada [3], using data provided by the Toronto Police we were able to identify that from 2014 to 2020 that the rate of total number of victims is increasing with males having a significantly higher rate of total number of crimes committed against them. However, when viewing the results its important to keep the limitations of the study in mind. The study didn't not account for any unreported crimes and did not also incarnate the population increase of Toronto. From what we have gathered the total rate of the number of victims using the collected data resulted in an increasing rate year over year, but to get a more accurate idea if Toronto is getting safer we need more data. Analyzing crime in Toronto is a complicated endeavor and to get a more complete idea if Toronto is getting safer, we need to account for many of the limitations of the study. Only with more complete data will we be able to answer that question.
+
+
+\newpage
+
+# Bibliography
+
+
+1.
+(2021) *About Police Annual Statistical Report - Reported Crimes*. City of Toronto, published by Toronto Police Services [https://open.toronto.ca/dataset/police-annual-statistical-report-reported-crimes/](https://open.toronto.ca/dataset/police-annual-statistical-report-reported-crimes/). (Last Accessed: Oct 25, 2021) 
+
+2.
+(2021) *What are the top ranking cities in 2021?*. The Economist. [https://safecities.economist.com/](https://safecities.economist.com/). (Last Accessed: Oct 25, 2021)  
+
+3. 
+(2020, June 12) *City of Toronto takes top spot as fastest growing city in Canada and U.S.*. City of Toronto [https://www.toronto.ca/news/city-of-toronto-takes-top-spot-as-fastest-growing-city-in-canada-and-u-s/](https://www.toronto.ca/news/city-of-toronto-takes-top-spot-as-fastest-growing-city-in-canada-and-u-s/). (Last Accessed: Oct 25, 2021) 
+
+4. 
+(2020, June 8) *Canadians' perceptions of personal safety since COVID-19*. Statistics Canada. [https://www150.statcan.gc.ca/n1/daily-quotidien/200609/dq200609a-eng.htm](https://www150.statcan.gc.ca/n1/daily-quotidien/200609/dq200609a-eng.htm). (Last Accessed: Oct 25, 2021)  
+5.
+(2021) *About Police Annual Statistical Report - Reported Crimes*. Toronto Police Services. [https://data.torontopolice.on.ca/pages/annualstatisticalreport](https://data.torontopolice.on.ca/pages/annualstatisticalreport). (Last Accessed: Oct 25, 2021) 
+
+6. 
+*City of Toronto Open Data*. City of Toronto. [https://open.toronto.ca/](https://open.toronto.ca/). (Last Accessed: Oct 25, 2021) 
+
+7. 
+(Sept 28, 2010) *More crimes going unreported: survey*. Canadian Broadcasting Corporation. [https://www.cbc.ca/news/canada/more-crimes-going-unreported-survey-1.897562](https://www.cbc.ca/news/canada/more-crimes-going-unreported-survey-1.897562). (Last Accessed: Oct 25, 2021) 
+
+8. 
+(Nov, 2014) *Measuring gender-based violence in Canada*. Statistics Canada. [https://unstats.un.org/unsd/gender/mexico_nov2014/Session%203%20Canada%20ppt.pdf](https://unstats.un.org/unsd/gender/mexico_nov2014/Session%203%20Canada%20ppt.pdf). (Last Accessed: Oct 25, 2021) 
+
+
